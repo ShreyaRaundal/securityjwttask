@@ -285,56 +285,41 @@ Handled using **GlobalExceptionHandler**
 
 ---
 
-CLIENT (Postman / Frontend)
-        |
-        |  HTTP Request (JSON)
-        |  Authorization: Bearer <JWT>
-        v
-------------------------------------------------
-|           SPRING SECURITY LAYER              |
-|----------------------------------------------|
-|  JwtAuthenticationFilter                     |
-|   - Extracts JWT from header                 |
-|   - Validates token                          |
-|   - Loads user from DB                       |
-|   - Sets SecurityContext                     |
-------------------------------------------------
-        |
-        v
-------------------------------------------------
-|            CONTROLLER LAYER                  |
-|----------------------------------------------|
-|  AuthController                              |
-|  ProductController                           |
-|  - Handles HTTP requests                    |
-|  - Calls service layer                      |
-------------------------------------------------
-        |
-        v
-------------------------------------------------
-|             SERVICE LAYER                    |
-|----------------------------------------------|
-|  AuthenticationService                      |
-|  ProductService                             |
-|  - Business logic                           |
-|  - Validation                               |
-|  - Token generation                         |
-------------------------------------------------
-        |
-        v
-------------------------------------------------
-|           REPOSITORY LAYER                   |
-|----------------------------------------------|
-|  UserRepository                              |
-|  ProductRepository                           |
-|  - JPA / Hibernate                           |
-------------------------------------------------
-        |
-        v
--------------------------------
-|        DATABASE             |
-|  (PostgreSQL / MySQL)       |
--------------------------------
+                ┌────────────────────┐
+                │       CLIENT       │
+                │ (Postman / UI)     │
+                └─────────┬──────────┘
+                          │
+                          ▼
+                ┌────────────────────┐
+                │  SecurityFilterChain│
+                │  (Spring Security) │
+                │                    │
+                │  requestMatchers() │
+                │  authenticated()   │
+                │  permitAll()       │
+                └─────────┬──────────┘
+                          │
+        ┌─────────────────┴─────────────────┐
+        │                                   │
+        ▼                                   ▼
+┌──────────────────┐             ┌──────────────────┐
+│ JwtAuth Filter   │             │ Request Rejected │
+│ (Token Validate) │             │ (401/403)        │
+└─────────┬────────┘             └──────────────────┘
+          │
+          ▼
+┌────────────────────────┐
+│ Controller Method      │
+│ (@MFS maybe present)   │
+└─────────┬──────────────┘
+          │
+          ▼
+┌────────────────────────┐
+│  @MFS Aspect (AOP)     │
+│  (Extra check only)    │
+└────────────────────────┘
+
 
 
 
